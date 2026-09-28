@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import type { ProjectState } from "../App";
+import { useTheme } from "../App";
 import { Globe, CreditCard, Mail, Server, ExternalLink, BrainCircuit, Terminal } from "lucide-react";
 
 const PHASE_LABELS: Record<string, string> = {
@@ -39,10 +40,16 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 export function OutputPanel({ state }: { state: ProjectState }) {
+  const theme = useTheme();
+  const isDark = theme === "dark";
   const hasRuns = state.runs && state.runs.length > 0;
   const hasLogs = state.logs && state.logs.length > 0;
   const isDone = state.phase === "done";
   const logEndRef = useRef<HTMLDivElement>(null);
+  const card = isDark ? "bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30" : "bg-white/60 backdrop-blur-sm border border-stone-200/60 shadow-sm";
+  const muted = isDark ? "text-zinc-400" : "text-stone-500";
+  const subtle = isDark ? "text-zinc-600" : "text-stone-400";
+  const heading = isDark ? "text-zinc-200" : "text-zinc-800";
 
   useEffect(() => {
     logEndRef.current?.scrollTo({ top: logEndRef.current.scrollHeight, behavior: "smooth" });
@@ -51,7 +58,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
   return (
     <div className="flex-1 overflow-y-auto p-5 space-y-4">
       {/* Phase indicator */}
-      <div className="rounded-xl bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30 p-4">
+      <div className="rounded-xl ${card} p-4">
         <div className="flex items-center gap-2 mb-2">
           <div className={`h-2.5 w-2.5 rounded-full ${
             state.phase === "done" ? "bg-emerald-400" :
@@ -67,7 +74,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
 
       {/* Brainbase orchestration */}
       {state.orchestrationId && (
-        <div className="rounded-xl bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30 p-4">
+        <div className="rounded-xl ${card} p-4">
           <div className="flex items-center gap-2 mb-3">
             <BrainCircuit className="h-3.5 w-3.5 text-indigo-400" />
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Brainbase Orchestration</span>
@@ -78,7 +85,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
 
       {/* Agent runs */}
       {hasRuns && (
-        <div className="rounded-xl bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30 p-4">
+        <div className="rounded-xl ${card} p-4">
           <div className="flex items-center gap-2 mb-3">
             <Server className="h-3.5 w-3.5 text-indigo-400" />
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Agent Team</span>
@@ -98,7 +105,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
 
       {/* Technical log */}
       {hasLogs && (
-        <div className="rounded-xl bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30 p-4">
+        <div className="rounded-xl ${card} p-4">
           <div className="flex items-center gap-2 mb-3">
             <Terminal className="h-3.5 w-3.5 text-emerald-400" />
             <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Technical Log</span>

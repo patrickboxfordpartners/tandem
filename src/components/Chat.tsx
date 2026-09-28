@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { MessageBubble } from "./MessageBubble";
 import { ApprovalCard } from "./ApprovalCard";
 import { Send } from "lucide-react";
+import { useTheme } from "../App";
 
 interface Message {
   id: string;
@@ -226,6 +227,8 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
   };
 
   const canType = (phase === "idle" || phase === "chatting" || phase === "done") && !loading;
+  const theme = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <div className="flex-1 flex flex-col">
@@ -238,7 +241,7 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
         })}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-zinc-800/80 backdrop-blur-sm border border-zinc-700/30 rounded-2xl px-4 py-3">
+            <div className={`backdrop-blur-sm border rounded-2xl px-4 py-3 ${isDark ? "bg-zinc-800/80 border-zinc-700/30" : "bg-white/80 border-stone-200/60"}`}>
               <p className="text-xs text-indigo-400 font-medium mb-1">Tandem</p>
               <div className="flex gap-1">
                 <div className="h-2 w-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -260,15 +263,15 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
         )}
         <div ref={bottomRef} />
       </div>
-      <div className="p-4 border-t border-zinc-800/60 backdrop-blur-md bg-zinc-950/50">
-        <div className="flex gap-2 max-w-3xl mx-auto">
+      <div className={`p-4 border-t backdrop-blur-md ${isDark ? "border-zinc-800/60 bg-zinc-950/50" : "border-stone-200/60 bg-white/50"}`}>
+        <div className="flex gap-2">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder={phase === "idle" ? "Tell me what you want to build..." : phase === "chatting" ? "Answer Tandem's questions..." : "Describe what you want to build..."}
             disabled={!canType}
-            className="flex-1 px-4 py-3 rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-zinc-700/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 disabled:opacity-50 transition-all"
+            className={`flex-1 px-4 py-3 rounded-xl backdrop-blur-sm border text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 disabled:opacity-50 transition-all ${isDark ? "bg-zinc-800/70 border-zinc-700/50 text-zinc-100 placeholder:text-zinc-500" : "bg-white/80 border-stone-200 text-zinc-900 placeholder:text-stone-400"}`}
           />
           <button
             onClick={handleSend}
