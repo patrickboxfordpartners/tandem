@@ -104,7 +104,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
   }, [state.logs?.length]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-4">
+    <div className="p-5 space-y-4">
       {/* Launch checklist */}
       <div className={`rounded-xl ${card} p-4`}>
         <div className="flex items-center justify-between mb-3">
