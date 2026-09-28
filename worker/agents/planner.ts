@@ -13,10 +13,11 @@ export interface ProjectSpec {
 }
 
 export async function runPlanner(brief: string, env: Env): Promise<ProjectSpec> {
-  const response = await callClaude(env, [
+  const response = await callClaude(
+    env,
+    [{ role: "user", content: brief }],
     {
-      role: "system",
-      content: `You are Tandem's Planner agent. Parse a business idea into a structured project specification.
+      system: `You are Tandem's Planner agent. Parse a business idea into a structured project specification.
 Return ONLY valid JSON matching this schema (no markdown, no explanation):
 {
   "name": "Business Name",
@@ -31,9 +32,8 @@ Return ONLY valid JSON matching this schema (no markdown, no explanation):
 The tasks array should list 3-5 steps the agent team will execute: infrastructure, payments, email, deployment.
 Amounts are in cents (e.g., 1500 = $15.00).
 The slug must be lowercase alphanumeric with hyphens only.`,
-    },
-    { role: "user", content: brief },
-  ]);
+    }
+  );
 
   const match = response.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Planner did not return valid JSON");

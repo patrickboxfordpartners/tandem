@@ -1,11 +1,25 @@
 import type { Env } from "../types";
 
 interface ChatMessage {
-  role: "system" | "user" | "assistant";
+  role: "user" | "assistant";
   content: string;
 }
 
-export async function callClaude(env: Env, messages: ChatMessage[], options?: { maxTokens?: number }): Promise<string> {
+export async function callClaude(
+  env: Env,
+  messages: ChatMessage[],
+  options?: { maxTokens?: number; system?: string }
+): Promise<string> {
+  const body: any = {
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: options?.maxTokens || 2048,
+    messages,
+  };
+
+  if (options?.system) {
+    body.system = options.system;
+  }
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -13,11 +27,7 @@ export async function callClaude(env: Env, messages: ChatMessage[], options?: { 
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
-    body: JSON.stringify({
-      model: "claude-sonnet-5",
-      max_tokens: options?.maxTokens || 2048,
-      messages,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!res.ok) {
