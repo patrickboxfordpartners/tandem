@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
+import { runPlanner, type ProjectSpec } from "../agents/planner";
 
 const projects = new Hono<{ Bindings: Env }>();
 
@@ -22,6 +23,47 @@ projects.post("/", async (c) => {
   ).bind(id, name, brief, new Date().toISOString()).run();
 
   return c.json({ id, status: "planning" });
+});
+
+projects.post("/:id/plan", async (c) => {
+  const id = c.req.param("id");
+  const project = await c.env.DB.prepare("SELECT * FROM projects WHERE id = ?").bind(id).first();
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const spec = await runPlanner(project.brief as string, c.env);
+
+  await c.env.DB.prepare(
+    "UPDATE projects SET spec = ?, name = ?, status = 'planning' WHERE id = ?"
+  ).bind(JSON.stringify(spec), spec.name, id).run();
+
+  return c.json({ plan: { name: spec.name, tasks: spec.tasks } });
+});
+
+projects.post("/:id/execute", async (c) => {
+  const id = c.req.param("id");
+  const project = await c.env.DB.prepare("SELECT * FROM projects WHERE id = ?").bind(id).first();
+  if (!project || !project.spec) return c.json({ error: "No spec" }, 400);
+
+  const now = new Date().toISOString();
+  const agents = ["infra", "payments", "comms", "deployer"];
+
+  for (const agent of agents) {
+    await c.env.DB.prepare(
+      "INSERT INTO agent_runs (id, project_id, agent, status, created_at) VALUES (?, ?, ?, 'pending', ?)"
+    ).bind(crypto.randomUUID(), id, agent, now).run();
+  }
+
+  await c.env.DB.prepare("UPDATE projects SET status = 'provisioning' WHERE id = ?").bind(id).run();
+
+  // Fire-and-forget: run agents in background
+  c.executionCtx.waitUntil(
+    (async () => {
+      const { executeAgents } = await import("./orchestrator");
+      await executeAgents(id, JSON.parse(project.spec as string), c.env);
+    })()
+  );
+
+  return c.json({ ok: true, status: "provisioning" });
 });
 
 projects.get("/:id", async (c) => {
