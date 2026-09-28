@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import type { ProjectState } from "../App";
 import { useTheme } from "../App";
-import { Globe, CreditCard, Mail, Server, ExternalLink, BrainCircuit, Terminal, CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { Globe, CreditCard, Mail, Server, ExternalLink, BrainCircuit, Terminal, CheckCircle2, Circle, Loader2, Bot, FileText } from "lucide-react";
 
 const AGENT_LABELS: Record<string, string> = {
   infra: "Infrastructure",
@@ -92,6 +92,8 @@ export function OutputPanel({ state }: { state: ProjectState }) {
   const isDark = theme === "dark";
   const hasRuns = state.runs && state.runs.length > 0;
   const hasLogs = state.logs && state.logs.length > 0;
+  const hasAgents = state.recommendedAgents && state.recommendedAgents.length > 0;
+  const hasDocs = state.recommendedDocs && state.recommendedDocs.length > 0;
   const isDone = state.phase === "done";
   const logEndRef = useRef<HTMLDivElement>(null);
   const card = isDark ? "bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30" : "bg-white backdrop-blur-sm border border-stone-200 shadow-sm";
@@ -233,6 +235,67 @@ export function OutputPanel({ state }: { state: ProjectState }) {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Recommended Backend Agents */}
+      {hasAgents && (
+        <div className={`rounded-xl ${card} p-4`}>
+          <div className="flex items-center gap-2 mb-3">
+            <Bot className="h-3.5 w-3.5 text-violet-400" />
+            <span className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-zinc-400" : "text-stone-500"}`}>Recommended Agents</span>
+          </div>
+          <p className={`text-[11px] mb-3 ${isDark ? "text-zinc-500" : "text-stone-400"}`}>
+            Backend agents your product will need as it grows:
+          </p>
+          <div className="space-y-3">
+            {state.recommendedAgents!.map((agent, i) => (
+              <div key={i}>
+                <p className={`text-sm font-medium ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>{agent.name}</p>
+                <p className={`text-[11px] ${isDark ? "text-zinc-400" : "text-stone-500"}`}>{agent.purpose}</p>
+                <p className={`text-[10px] ${isDark ? "text-zinc-600" : "text-stone-400"}`}>Triggers: {agent.triggers}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recommended Documentation */}
+      {hasDocs && (
+        <div className={`rounded-xl ${card} p-4`}>
+          <div className="flex items-center gap-2 mb-3">
+            <FileText className="h-3.5 w-3.5 text-amber-400" />
+            <span className={`text-xs font-medium uppercase tracking-wide ${isDark ? "text-zinc-400" : "text-stone-500"}`}>Documentation Plan</span>
+          </div>
+          <div className="space-y-2">
+            {state.recommendedDocs!.map((doc, i) => (
+              <div key={i} className="flex items-start gap-2">
+                <CheckCircle2 className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${isDark ? "text-zinc-600" : "text-stone-400"}`} />
+                <div>
+                  <p className={`text-sm ${isDark ? "text-zinc-300" : "text-zinc-700"}`}>{doc.name}</p>
+                  <p className={`text-[11px] ${isDark ? "text-zinc-500" : "text-stone-400"}`}>{doc.purpose}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Persistent Memory CTA */}
+      {isDone && (
+        <div className={`rounded-xl p-4 border ${isDark ? "bg-indigo-500/5 border-indigo-500/20" : "bg-indigo-50 border-indigo-200"}`}>
+          <p className={`text-sm font-medium mb-1.5 ${isDark ? "text-indigo-300" : "text-indigo-700"}`}>Keep your co-founder's memory</p>
+          <p className={`text-[11px] leading-relaxed mb-3 ${isDark ? "text-zinc-400" : "text-stone-500"}`}>
+            Your technical co-founder needs persistent memory to grow with your business. Every decision, every pivot, every customer insight should carry forward. Without it, you're starting from scratch every conversation.
+          </p>
+          <a
+            href="https://mitosis.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+          >
+            Connect Mitosis Labs for persistent memory <ExternalLink className="h-3 w-3" />
+          </a>
         </div>
       )}
     </div>

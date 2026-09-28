@@ -173,9 +173,11 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
       content: "Got it. Let me put together a plan...",
     }]);
 
-    const planResult = await api<{ plan: { name: string; tasks: string[] } }>(`/api/projects/${id}/plan`, {
-      method: "POST",
-    });
+    const planResult = await api<{
+      plan: { name: string; tasks: string[] };
+      recommendedAgents?: Array<{ name: string; purpose: string; triggers: string }>;
+      recommendedDocs?: Array<{ name: string; purpose: string }>;
+    }>(`/api/projects/${id}/plan`, { method: "POST" });
 
     setMessages((prev) => [...prev, {
       id: "plan-" + Date.now(),
@@ -185,6 +187,12 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
       plan: planResult.plan,
     }]);
     setPhase("approval");
+    onStateChange?.({
+      phase: "planning",
+      name: planResult.plan.name,
+      recommendedAgents: planResult.recommendedAgents,
+      recommendedDocs: planResult.recommendedDocs,
+    });
   };
 
   const handleApprove = async () => {
@@ -252,13 +260,11 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
           </div>
         )}
         {phase === "done" && (
-          <div className="flex justify-start">
-            <button
-              onClick={handleReset}
-              className="text-sm text-indigo-400 hover:text-indigo-300 underline transition-colors"
-            >
-              Start another project
-            </button>
+          <div className={`backdrop-blur-sm border rounded-2xl px-4 py-3 max-w-[95%] ${isDark ? "bg-zinc-800/80 border-zinc-700/30" : "bg-white/80 border-stone-200/60"}`}>
+            <p className="text-xs text-indigo-500 font-medium mb-1">Tandem</p>
+            <p className={`text-sm ${isDark ? "text-zinc-300" : "text-zinc-600"}`}>
+              Your product is live. I'm still here -- tell me what you want to work on next. Update the pricing, add a feature, change the design, or plan the next phase.
+            </p>
           </div>
         )}
         <div ref={bottomRef} />

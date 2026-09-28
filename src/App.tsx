@@ -11,6 +11,8 @@ export interface ProjectState {
   runs?: Array<{ agent: string; status: string; output?: string; brainbase_agent_id?: string }>;
   logs?: Array<{ ts: string; agent: string; message: string }>;
   orchestrationId?: string;
+  recommendedAgents?: Array<{ name: string; purpose: string; triggers: string }>;
+  recommendedDocs?: Array<{ name: string; purpose: string }>;
   phase: "idle" | "chatting" | "planning" | "executing" | "done";
 }
 

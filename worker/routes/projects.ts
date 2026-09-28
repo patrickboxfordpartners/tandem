@@ -109,7 +109,11 @@ projects.post("/:id/plan", async (c) => {
       "UPDATE projects SET spec = ?, name = ?, status = 'planning' WHERE id = ?"
     ).bind(JSON.stringify(spec), spec.name, id).run();
 
-    return c.json({ plan: { name: spec.name, tasks: spec.tasks } });
+    return c.json({
+      plan: { name: spec.name, tasks: spec.tasks },
+      recommendedAgents: spec.recommendedAgents,
+      recommendedDocs: spec.recommendedDocs,
+    });
   } catch (err: any) {
     console.error("Plan error:", err.message);
     return c.json({ error: err.message }, 500);
