@@ -69,6 +69,15 @@ h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;line-h
 .pricing{text-align:center;padding:4rem 2rem 6rem}
 .price-tag{font-size:3rem;font-weight:800;letter-spacing:-.03em;margin-bottom:.5rem;color:${accent}}
 .price-sub{color:${priceSub};font-size:.9rem;margin-bottom:2rem}
+.faq{padding:4rem 2rem 6rem;max-width:700px;margin:0 auto}
+.faq h2{text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:2rem}
+.faq-list{display:flex;flex-direction:column;gap:.75rem}
+.faq-item{background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;backdrop-filter:blur(8px);transition:border-color .3s}
+.faq-item:hover{border-color:${accent}60}
+.faq-item summary{padding:1.25rem;cursor:pointer;font-weight:500;font-size:.95rem;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.faq-item summary::after{content:"+";font-size:1.2rem;color:${muted};transition:transform .2s}
+.faq-item[open] summary::after{transform:rotate(45deg)}
+.faq-item p{padding:0 1.25rem 1.25rem;color:${muted};font-size:.9rem;line-height:1.7}
 footer{text-align:center;padding:3rem 2rem;border-top:1px solid ${footerBorder};color:${footerText};font-size:.8rem}
 footer a{color:${accent};text-decoration:none}
 </style>
@@ -96,7 +105,24 @@ ${spec.features.map((f, i) => `<div class="feat"><div class="feat-icon">${featur
 <div class="price-sub">Cancel anytime. No hidden fees.</div>
 <a class="cta" href="${esc(ctaHref)}">${esc(ctaText)}</a>
 </section>
+${spec.faq && spec.faq.length > 0 ? `<section class="faq">
+<h2>Frequently Asked Questions</h2>
+<div class="faq-list">
+${spec.faq.map((item) => `<details class="faq-item"><summary>${esc(item.q)}</summary><p>${esc(item.a)}</p></details>`).join("\n")}
+</div>
+</section>` : ""}
 <footer>Launched with <a href="https://tandem.boxfordpartners.com">Tandem</a></footer>
+${spec.faq && spec.faq.length > 0 ? `<script type="application/ld+json">
+${JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": spec.faq.map((item) => ({
+    "@type": "Question",
+    "name": item.q,
+    "acceptedAnswer": { "@type": "Answer", "text": item.a }
+  }))
+})}
+</script>` : ""}
 </div>
 </body>
 </html>`;

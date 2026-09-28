@@ -11,11 +11,30 @@ export async function runDeployerAgent(
 ): Promise<void> {
   const landingHtml = buildLandingHtml(spec, checkoutUrl);
 
+  const llmsTxt = [
+    `# ${spec.name}`,
+    `> ${spec.description}`,
+    "",
+    "## Features",
+    ...spec.features.map((f) => `- ${f}`),
+    "",
+    ...(spec.faq?.length ? [
+      "## FAQ",
+      ...spec.faq.map((item) => `Q: ${item.q}\nA: ${item.a}\n`),
+    ] : []),
+    `Built with Tandem (tandem.boxfordpartners.com)`,
+  ].join("\n");
+
   const workerScript = `export default {
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === "/api/health") {
       return Response.json({ ok: true, name: ${JSON.stringify(spec.name)} });
+    }
+    if (url.pathname === "/llms.txt" || url.pathname === "/.well-known/llms.txt") {
+      return new Response(${JSON.stringify(llmsTxt)}, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
     }
     return new Response(${JSON.stringify(landingHtml)}, {
       headers: { "Content-Type": "text/html" },

@@ -27,6 +27,7 @@ export interface ProjectSpec {
   features: string[];
   welcomeEmail: { subject: string; body: string } | null;
   tasks: string[];
+  faq: Array<{ q: string; a: string }>;
   design: DesignPrefs;
   recommendedAgents: RecommendedAgent[];
   recommendedDocs: RecommendedDoc[];
@@ -50,6 +51,7 @@ Return ONLY valid JSON matching this schema (no markdown, no explanation):
   "oneTimePrice": null or amount in cents,
   "features": ["Compelling feature description 1", "Feature 2", ...],
   "welcomeEmail": { "subject": "Welcome to [Name]!", "body": "A warm, professional welcome email body" } or null,
+  "faq": [{ "q": "Question a prospect would ask", "a": "Clear, helpful answer" }, ...],
   "design": { "theme": "dark" or "light", "accent": "#hex color for primary accent", "vibe": "Brief style description" },
   "tasks": ["task 1", "task 2", ...],
   "recommendedAgents": [
@@ -70,6 +72,7 @@ Rules:
 - Tasks should describe what the agent team will do (3-5 steps)
 - recommendedAgents: 3-5 backend agents the product will need (e.g., onboarding agent, billing agent, support agent, analytics agent). Be specific to the business type.
 - recommendedDocs: 3-4 documents that should be created (e.g., API documentation, onboarding guide, privacy policy, terms of service). Be specific to the business.
+- faq: 4-6 questions a prospective customer would ask, with clear answers. These become structured FAQ data on the landing page for AI discoverability.
 - design: Extract from the conversation. If user mentioned "light" or "Stripe-like", use theme "light". Pick an accent color that matches their request (e.g., green = "#16a34a", blue = "#2563eb"). Vibe should be 2-3 words (e.g., "clean and modern", "bold and minimal").`,
     }
   );
@@ -78,6 +81,7 @@ Rules:
   const match = cleaned.match(/\{[\s\S]*\}/);
   if (!match) throw new Error("Planner did not return valid JSON: " + response.slice(0, 200));
   const spec = JSON.parse(match[0]) as ProjectSpec;
+  if (!spec.faq) spec.faq = [];
   if (!spec.recommendedAgents) spec.recommendedAgents = [];
   if (!spec.recommendedDocs) spec.recommendedDocs = [];
   return spec;
