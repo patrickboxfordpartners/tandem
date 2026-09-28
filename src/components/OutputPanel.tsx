@@ -7,6 +7,9 @@ const AGENT_LABELS: Record<string, string> = {
   infra: "Infrastructure",
   payments: "Payments",
   comms: "Email",
+  legal: "Legal",
+  seo: "SEO",
+  research: "Research",
   deployer: "Deployer",
   orchestrator: "Orchestrator",
 };
@@ -53,9 +56,24 @@ function getChecklist(state: ProjectState): ChecklistItem[] {
       detail: agentStatus("comms") === "completed" ? "Welcome email sent" : agentStatus("comms") === "running" ? "Sending via Postmark" : undefined,
     },
     {
+      label: "Generate legal docs",
+      status: agentStatus("legal") === "completed" ? "done" : agentStatus("legal") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
+      detail: agentStatus("legal") === "completed" ? "Privacy policy + terms of service" : agentStatus("legal") === "running" ? "Drafting via Claude" : undefined,
+    },
+    {
+      label: "SEO infrastructure",
+      status: agentStatus("seo") === "completed" ? "done" : agentStatus("seo") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
+      detail: agentStatus("seo") === "completed" ? "robots.txt, sitemap.xml, OG tags" : undefined,
+    },
+    {
+      label: "Competitive research",
+      status: agentStatus("research") === "completed" ? "done" : agentStatus("research") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
+      detail: agentStatus("research") === "completed" ? "Landscape brief ready" : agentStatus("research") === "running" ? "Analyzing competitors via Claude" : undefined,
+    },
+    {
       label: "Final deployment",
       status: agentStatus("deployer") === "completed" ? "done" : agentStatus("deployer") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
-      detail: agentStatus("deployer") === "completed" ? "Landing page updated with checkout" : undefined,
+      detail: agentStatus("deployer") === "completed" ? "All routes deployed" : undefined,
     },
     {
       label: "Live and ready",

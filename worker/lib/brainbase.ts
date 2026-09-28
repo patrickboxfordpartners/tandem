@@ -19,6 +19,18 @@ export const BRAINBASE_AGENTS = {
     id: "fc1b30ee-088d-4b2e-946b-72d83f6e9d65",
     title: "Comms",
   },
+  legal: {
+    id: "ae30a608-acac-40f2-91e0-de65fe904db6",
+    title: "Legal",
+  },
+  seo: {
+    id: "ff37419c-7a5a-4f7f-8ade-102dbe099d2a",
+    title: "SEO",
+  },
+  research: {
+    id: "0dfa3bee-5bef-4a78-8718-154457dd52c0",
+    title: "Research",
+  },
   deployer: {
     id: "b91a3d0c-4409-4450-8c7b-e372bb8bfc91",
     title: "Deployer",
@@ -29,8 +41,13 @@ export const BRAINBASE_EDGES = [
   { from: "planner", to: "infra", description: "Planner sends project spec to Infrastructure" },
   { from: "planner", to: "payments", description: "Planner sends project spec to Payments" },
   { from: "planner", to: "comms", description: "Planner sends project spec to Comms" },
+  { from: "planner", to: "legal", description: "Planner sends spec to Legal for privacy policy and terms" },
+  { from: "planner", to: "seo", description: "Planner sends spec to SEO for crawl infrastructure" },
+  { from: "planner", to: "research", description: "Planner sends spec to Research for competitive analysis" },
   { from: "infra", to: "deployer", description: "Infrastructure passes worker name to Deployer" },
   { from: "payments", to: "deployer", description: "Payments passes checkout URL to Deployer" },
+  { from: "legal", to: "deployer", description: "Legal passes privacy policy and terms to Deployer" },
+  { from: "seo", to: "deployer", description: "SEO passes robots.txt and sitemap to Deployer" },
 ];
 
 export function getOrchestrationGraph() {

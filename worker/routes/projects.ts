@@ -126,7 +126,7 @@ projects.post("/:id/execute", async (c) => {
   if (!project || !project.spec) return c.json({ error: "No spec" }, 400);
 
   const now = new Date().toISOString();
-  const agents = ["infra", "payments", "comms", "deployer"];
+  const agents = ["infra", "payments", "comms", "legal", "seo", "research", "deployer"];
 
   for (const agent of agents) {
     await c.env.DB.prepare(
