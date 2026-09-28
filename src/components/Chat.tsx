@@ -47,6 +47,7 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
       onStateChange?.({
         phase: "executing",
         runs,
+        logs: data.logs || [],
         orchestrationId: data.brainbase_orchestration_id,
         name: data.name,
       });
@@ -77,6 +78,7 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
         onStateChange?.({
           phase: "done",
           runs,
+          logs: data.logs || [],
           orchestrationId: data.brainbase_orchestration_id,
           name: data.name,
           workerUrl: data.worker_url,

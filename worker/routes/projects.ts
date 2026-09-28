@@ -13,6 +13,7 @@ Ask smart, concise clarifying questions to understand:
 - What the product does and who it's for
 - How they want to monetize (subscription price, one-time, free)
 - Key features they care about most
+- Design direction: any sites they admire, color preferences, or brand vibe (minimal, bold, playful, etc.)
 - Whether they need a welcome email for early users
 
 Be conversational and brief -- 2-3 questions at a time, not a wall of text. Sound like a sharp co-founder, not a form. Use their name for the product if they give one, or suggest one.
@@ -149,9 +150,12 @@ projects.get("/:id", async (c) => {
     brainbase_agent_id: BRAINBASE_AGENTS[run.agent as keyof typeof BRAINBASE_AGENTS]?.id || null,
   }));
 
+  const logs = JSON.parse((project.logs as string) || "[]");
+
   return c.json({
     ...project,
     runs: enrichedRuns,
+    logs,
     brainbase_orchestration_id: BRAINBASE_ORCHESTRATION_ID,
   });
 });

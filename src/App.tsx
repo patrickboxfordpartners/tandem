@@ -8,6 +8,7 @@ export interface ProjectState {
   emailSent?: boolean;
   name?: string;
   runs?: Array<{ agent: string; status: string; output?: string; brainbase_agent_id?: string }>;
+  logs?: Array<{ ts: string; agent: string; message: string }>;
   orchestrationId?: string;
   phase: "idle" | "chatting" | "planning" | "executing" | "done";
 }

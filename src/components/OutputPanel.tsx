@@ -1,5 +1,6 @@
+import { useRef, useEffect } from "react";
 import type { ProjectState } from "../App";
-import { Globe, CreditCard, Mail, Server, ExternalLink, BrainCircuit } from "lucide-react";
+import { Globe, CreditCard, Mail, Server, ExternalLink, BrainCircuit, Terminal } from "lucide-react";
 
 const PHASE_LABELS: Record<string, string> = {
   idle: "Waiting for your idea",
@@ -39,7 +40,13 @@ const AGENT_LABELS: Record<string, string> = {
 
 export function OutputPanel({ state }: { state: ProjectState }) {
   const hasRuns = state.runs && state.runs.length > 0;
+  const hasLogs = state.logs && state.logs.length > 0;
   const isDone = state.phase === "done";
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logEndRef.current?.scrollTo({ top: logEndRef.current.scrollHeight, behavior: "smooth" });
+  }, [state.logs?.length]);
 
   return (
     <div className="flex-1 overflow-y-auto p-5 space-y-4">
@@ -84,6 +91,29 @@ export function OutputPanel({ state }: { state: ProjectState }) {
                 status={run.status}
                 brainbaseId={run.brainbase_agent_id}
               />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Technical log */}
+      {hasLogs && (
+        <div className="rounded-xl bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30 p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="text-xs font-medium text-zinc-400 uppercase tracking-wide">Technical Log</span>
+          </div>
+          <div ref={logEndRef} className="space-y-2 max-h-64 overflow-y-auto">
+            {state.logs!.map((entry, i) => (
+              <div key={i} className="flex gap-2">
+                <span className="text-[10px] text-zinc-600 font-mono whitespace-nowrap mt-0.5">
+                  {new Date(entry.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+                <div className="min-w-0">
+                  <span className="text-[10px] text-indigo-400 font-medium">{AGENT_LABELS[entry.agent] || entry.agent}</span>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed break-words">{entry.message}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
