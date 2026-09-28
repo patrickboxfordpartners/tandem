@@ -11,7 +11,7 @@ export async function callClaude(
   options?: { maxTokens?: number; system?: string }
 ): Promise<string> {
   const body: any = {
-    model: "claude-3-5-sonnet-20241022",
+    model: "claude-sonnet-5",
     max_tokens: options?.maxTokens || 2048,
     messages,
   };
