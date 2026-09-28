@@ -1,6 +1,7 @@
 import type { Env } from "../types";
 import type { ProjectSpec } from "../agents/planner";
 import { runInfraAgent } from "../agents/infra";
+import { runPaymentsAgent } from "../agents/payments";
 
 export async function executeAgents(projectId: string, spec: ProjectSpec, env: Env): Promise<void> {
   const updateRun = async (agent: string, status: string, output?: string, error?: string) => {
@@ -24,8 +25,15 @@ export async function executeAgents(projectId: string, spec: ProjectSpec, env: E
     })(),
     (async () => {
       await updateRun("payments", "running");
-      // TODO: Task 5 wires this up
-      await updateRun("payments", "completed", JSON.stringify({ message: "Payments agent not yet implemented" }));
+      try {
+        const result = await runPaymentsAgent(projectId, spec, env);
+        await env.DB.prepare(
+          "UPDATE projects SET stripe_checkout_url = ?, stripe_customer_id = ?, stripe_product_id = ? WHERE id = ?"
+        ).bind(result.checkoutUrl, result.customerId, result.productId, projectId).run();
+        await updateRun("payments", "completed", JSON.stringify(result));
+      } catch (err: any) {
+        await updateRun("payments", "failed", null, err.message);
+      }
     })(),
     (async () => {
       await updateRun("comms", "running");
