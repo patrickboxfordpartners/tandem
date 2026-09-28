@@ -26,7 +26,7 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
     id: "welcome",
     role: "agent",
     agent: "Tandem",
-    content: "I'm your AI technical co-founder. Tell me what you want to build and I'll ask a few questions to make sure we get it right. Then I'll provision the infrastructure, set up payments, configure email, and deploy a working product.",
+    content: "I'm your technical co-founder. I'm here to make sure we get everything done correctly, and that nothing technical falls through the cracks. We've got a lot of work to do, so let's get started. What are we working on?",
   }]);
   const [input, setInput] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
@@ -217,7 +217,7 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
       id: "welcome",
       role: "agent",
       agent: "Tandem",
-      content: "I'm your AI technical co-founder. Tell me what you want to build and I'll ask a few questions to make sure we get it right. Then I'll provision the infrastructure, set up payments, configure email, and deploy a working product.",
+      content: "I'm your technical co-founder. I'm here to make sure we get everything done correctly, and that nothing technical falls through the cracks. We've got a lot of work to do, so let's get started. What are we working on?",
     }]);
     setPhase("idle");
     setProjectId(null);
