@@ -35,7 +35,7 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <div className={`h-dvh flex flex-col relative overflow-hidden ${isDark ? "bg-zinc-950 text-zinc-100" : "bg-stone-50 text-zinc-900"}`}>
+      <div className={`${isDark ? "bg-zinc-950 text-zinc-100" : "bg-stone-50 text-zinc-900"}`} style={{ height: "100dvh", overflow: "hidden" }}>
         {/* Gradient mesh background */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden">
           <div className={`mesh-orb-1 absolute -top-32 -left-32 h-96 w-96 rounded-full blur-3xl ${isDark ? "bg-indigo-600/15" : "bg-indigo-400/10"}`} />
@@ -50,7 +50,11 @@ export default function App() {
           />
         </div>
 
-        <header className={`relative z-10 px-6 py-3.5 border-b backdrop-blur-md flex items-center gap-3 ${isDark ? "border-zinc-800/60 bg-zinc-950/70" : "border-stone-200/80 bg-white/70"}`}>
+        {/* Header - fixed height */}
+        <header
+          className={`relative z-10 px-6 border-b backdrop-blur-md flex items-center gap-3 ${isDark ? "border-zinc-800/60 bg-zinc-950/70" : "border-stone-200/80 bg-white/70"}`}
+          style={{ height: 52 }}
+        >
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-indigo-500/25">T</div>
           <h1 className="text-xl font-bold tracking-tight">Tandem</h1>
           <span className={`text-xs font-light tracking-tight ${isDark ? "text-zinc-500" : "text-stone-400"}`}>Your AI technical co-founder</span>
@@ -70,18 +74,20 @@ export default function App() {
           </div>
         </header>
 
-        <div className="relative z-10 flex-1">
-          {/* Chat - left column, absolute positioned */}
+        {/* Main area - fixed position, fills below header */}
+        <div className="fixed left-0 right-0 z-10 flex" style={{ top: 52, bottom: 0 }}>
+          {/* Chat column */}
           <div
-            className={`absolute top-0 bottom-0 left-0 w-[380px] flex flex-col border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}
+            className={`flex flex-col border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}
+            style={{ width: 380 }}
           >
             <Chat
               onProjectComplete={() => setProjectCount((prev) => prev + 1)}
               onStateChange={setProjectState}
             />
           </div>
-          {/* Output - right column, absolute positioned, scrollable */}
-          <div className="absolute top-0 bottom-0 left-[380px] right-0 overflow-y-auto hidden md:block">
+          {/* Output column */}
+          <div className="hidden md:block" style={{ flex: 1, overflowY: "auto" }}>
             <OutputPanel state={projectState} />
           </div>
         </div>
