@@ -30,13 +30,18 @@ projects.post("/:id/plan", async (c) => {
   const project = await c.env.DB.prepare("SELECT * FROM projects WHERE id = ?").bind(id).first();
   if (!project) return c.json({ error: "Not found" }, 404);
 
-  const spec = await runPlanner(project.brief as string, c.env);
+  try {
+    const spec = await runPlanner(project.brief as string, c.env);
 
-  await c.env.DB.prepare(
-    "UPDATE projects SET spec = ?, name = ?, status = 'planning' WHERE id = ?"
-  ).bind(JSON.stringify(spec), spec.name, id).run();
+    await c.env.DB.prepare(
+      "UPDATE projects SET spec = ?, name = ?, status = 'planning' WHERE id = ?"
+    ).bind(JSON.stringify(spec), spec.name, id).run();
 
-  return c.json({ plan: { name: spec.name, tasks: spec.tasks } });
+    return c.json({ plan: { name: spec.name, tasks: spec.tasks } });
+  } catch (err: any) {
+    console.error("Plan error:", err.message);
+    return c.json({ error: err.message }, 500);
+  }
 });
 
 projects.post("/:id/execute", async (c) => {

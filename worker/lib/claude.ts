@@ -12,7 +12,8 @@ export async function callClaude(
 ): Promise<string> {
   const body: any = {
     model: "claude-sonnet-5",
-    max_tokens: options?.maxTokens || 2048,
+    max_tokens: options?.maxTokens || 16000,
+    thinking: { type: "adaptive" },
     messages,
   };
 
@@ -20,21 +21,30 @@ export async function callClaude(
     body.system = options.system;
   }
 
+  const headers: Record<string, string> = {
+    "x-api-key": env.ANTHROPIC_API_KEY,
+    "anthropic-version": "2023-06-01",
+    "content-type": "application/json",
+  };
+  if (env.ANTHROPIC_WORKSPACE_ID) {
+    headers["anthropic-workspace-id"] = env.ANTHROPIC_WORKSPACE_ID;
+  }
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: {
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+    headers,
     body: JSON.stringify(body),
   });
 
+  const raw = await res.text();
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Claude API error ${res.status}: ${err}`);
+    throw new Error(`Claude API error ${res.status}: ${raw}`);
   }
 
-  const data = await res.json() as { content: Array<{ type: string; text: string }> };
-  return data.content[0]?.text || "";
+  const data = JSON.parse(raw) as { content: Array<{ type: string; text?: string }> };
+  const textBlock = data.content?.find((b) => b.type === "text");
+  if (!textBlock?.text) {
+    throw new Error(`Claude returned no text block: ${raw.slice(0, 500)}`);
+  }
+  return textBlock.text;
 }

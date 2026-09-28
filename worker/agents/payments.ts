@@ -44,8 +44,8 @@ export async function runPaymentsAgent(projectId: string, spec: ProjectSpec, env
   const session = await stripe.checkout.sessions.create({
     mode: spec.subscription ? "subscription" : "payment",
     line_items: [{ price: price.id, quantity: 1 }],
-    success_url: "https://tandem.build/success?session_id={CHECKOUT_SESSION_ID}",
-    cancel_url: "https://tandem.build/cancel",
+    success_url: "https://tandem.patrick-54b.workers.dev/?success=true",
+    cancel_url: "https://tandem.patrick-54b.workers.dev/?canceled=true",
     customer: customer.id,
     metadata: { tandem_project_id: projectId },
   });

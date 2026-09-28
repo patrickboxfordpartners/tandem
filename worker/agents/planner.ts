@@ -35,7 +35,8 @@ The slug must be lowercase alphanumeric with hyphens only.`,
     }
   );
 
-  const match = response.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Planner did not return valid JSON");
+  const cleaned = response.replace(/```json?\s*/g, "").replace(/```\s*/g, "");
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Planner did not return valid JSON: " + response.slice(0, 200));
   return JSON.parse(match[0]) as ProjectSpec;
 }

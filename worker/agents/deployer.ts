@@ -22,7 +22,7 @@ export async function runDeployerAgent(
     p { color: #a1a1aa; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
     .features { text-align: left; margin: 2rem 0; }
     .features li { color: #d4d4d8; padding: 0.5rem 0; list-style: none; }
-    .features li::before { content: "\\2713"; color: #818cf8; margin-right: 0.75rem; font-weight: bold; }
+    .features li::before { content: "✓"; color: #818cf8; margin-right: 0.75rem; font-weight: bold; }
     .cta { display: inline-block; padding: 0.75rem 2rem; background: #4f46e5; color: white; border-radius: 0.5rem; text-decoration: none; font-weight: 600; transition: background 0.2s; }
     .cta:hover { background: #4338ca; }
     .footer { margin-top: 3rem; color: #52525b; font-size: 0.8rem; }
@@ -45,9 +45,9 @@ export async function runDeployerAgent(
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === "/api/health") {
-      return Response.json({ ok: true, name: "${spec.name}" });
+      return Response.json({ ok: true, name: ${JSON.stringify(spec.name)} });
     }
-    return new Response(\`${landingHtml.replace(/`/g, "\\`").replace(/\$/g, "\\$")}\`, {
+    return new Response(${JSON.stringify(landingHtml)}, {
       headers: { "Content-Type": "text/html" },
     });
   }
