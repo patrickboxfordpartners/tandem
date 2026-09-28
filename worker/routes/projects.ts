@@ -1,9 +1,26 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
 import { runPlanner, type ProjectSpec } from "../agents/planner";
+import { callClaude } from "../lib/claude";
+import { postToSlack } from "../lib/slack";
 import { BRAINBASE_AGENTS, BRAINBASE_ORCHESTRATION_ID } from "../lib/brainbase";
 
 const projects = new Hono<{ Bindings: Env }>();
+
+const COFOUNDER_SYSTEM = `You are Tandem, an AI technical co-founder. You're having a conversation with someone who wants to build a product. Your job is to understand their idea well enough to build it.
+
+Ask smart, concise clarifying questions to understand:
+- What the product does and who it's for
+- How they want to monetize (subscription price, one-time, free)
+- Key features they care about most
+- Whether they need a welcome email for early users
+
+Be conversational and brief -- 2-3 questions at a time, not a wall of text. Sound like a sharp co-founder, not a form. Use their name for the product if they give one, or suggest one.
+
+When you have enough information to build (usually after 1-2 rounds of questions), end your message with the exact marker:
+[READY_TO_BUILD]
+
+This signals the system to generate the project spec. Only include this marker when you genuinely have enough detail. Don't rush -- but don't over-ask either. A good co-founder knows when to stop talking and start building.`;
 
 projects.get("/", async (c) => {
   const { results } = await c.env.DB.prepare(
@@ -18,12 +35,56 @@ projects.post("/", async (c) => {
 
   const id = crypto.randomUUID();
   const name = brief.slice(0, 60).trim();
+  const messages = JSON.stringify([{ role: "user", content: brief }]);
 
   await c.env.DB.prepare(
-    "INSERT INTO projects (id, name, brief, status, created_at) VALUES (?, ?, ?, 'planning', ?)"
-  ).bind(id, name, brief, new Date().toISOString()).run();
+    "INSERT INTO projects (id, name, brief, status, messages, created_at) VALUES (?, ?, ?, 'gathering', ?, ?)"
+  ).bind(id, name, brief, messages, new Date().toISOString()).run();
 
-  return c.json({ id, status: "planning" });
+  return c.json({ id, status: "gathering" });
+});
+
+projects.post("/:id/chat", async (c) => {
+  const id = c.req.param("id");
+  const { message } = await c.req.json<{ message?: string }>();
+  const project = await c.env.DB.prepare("SELECT * FROM projects WHERE id = ?").bind(id).first();
+  if (!project) return c.json({ error: "Not found" }, 404);
+
+  const history: Array<{ role: string; content: string }> = JSON.parse((project.messages as string) || "[]");
+
+  if (message?.trim()) {
+    history.push({ role: "user", content: message.trim() });
+  }
+
+  try {
+    const claudeMessages = history.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+    const response = await callClaude(c.env, claudeMessages, { system: COFOUNDER_SYSTEM });
+
+    const ready = response.includes("[READY_TO_BUILD]");
+    const cleanResponse = response.replace("[READY_TO_BUILD]", "").trim();
+
+    history.push({ role: "assistant", content: cleanResponse });
+
+    const newStatus = ready ? "planning" : "gathering";
+    await c.env.DB.prepare(
+      "UPDATE projects SET messages = ?, status = ? WHERE id = ?"
+    ).bind(JSON.stringify(history), newStatus, id).run();
+
+    if (!ready) {
+      await postToSlack(c.env, `💬 Tandem is asking:\n${cleanResponse}`);
+    } else {
+      await postToSlack(c.env, `✅ Requirements gathered. Ready to build.`);
+    }
+
+    return c.json({ response: cleanResponse, ready, status: newStatus });
+  } catch (err: any) {
+    console.error("Chat error:", err.message);
+    return c.json({ error: err.message }, 500);
+  }
 });
 
 projects.post("/:id/plan", async (c) => {
@@ -32,7 +93,10 @@ projects.post("/:id/plan", async (c) => {
   if (!project) return c.json({ error: "Not found" }, 404);
 
   try {
-    const spec = await runPlanner(project.brief as string, c.env);
+    const history: Array<{ role: string; content: string }> = JSON.parse((project.messages as string) || "[]");
+    const conversationSummary = history.map((m) => `${m.role}: ${m.content}`).join("\n");
+
+    const spec = await runPlanner(conversationSummary, c.env);
 
     await c.env.DB.prepare(
       "UPDATE projects SET spec = ?, name = ?, status = 'planning' WHERE id = ?"
@@ -61,7 +125,6 @@ projects.post("/:id/execute", async (c) => {
 
   await c.env.DB.prepare("UPDATE projects SET status = 'provisioning' WHERE id = ?").bind(id).run();
 
-  // Fire-and-forget: run agents in background
   c.executionCtx.waitUntil(
     (async () => {
       const { executeAgents } = await import("./orchestrator");

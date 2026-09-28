@@ -1,8 +1,20 @@
 import { useState } from "react";
 import { Chat } from "./components/Chat";
+import { OutputPanel } from "./components/OutputPanel";
+
+export interface ProjectState {
+  workerUrl?: string;
+  checkoutUrl?: string;
+  emailSent?: boolean;
+  name?: string;
+  runs?: Array<{ agent: string; status: string; output?: string; brainbase_agent_id?: string }>;
+  orchestrationId?: string;
+  phase: "idle" | "chatting" | "planning" | "executing" | "done";
+}
 
 export default function App() {
   const [projectCount, setProjectCount] = useState(0);
+  const [projectState, setProjectState] = useState<ProjectState>({ phase: "idle" });
 
   return (
     <div className="h-dvh bg-zinc-950 text-zinc-100 flex flex-col relative overflow-hidden">
@@ -34,8 +46,19 @@ export default function App() {
         </div>
       </header>
 
-      <div className="relative z-10 flex-1 flex flex-col min-h-0">
-        <Chat onProjectComplete={() => setProjectCount((prev) => prev + 1)} />
+      <div className="relative z-10 flex-1 flex min-h-0">
+        {/* Left: Chat */}
+        <div className="flex-1 flex flex-col min-w-0 border-r border-zinc-800/40">
+          <Chat
+            onProjectComplete={() => setProjectCount((prev) => prev + 1)}
+            onStateChange={setProjectState}
+          />
+        </div>
+
+        {/* Right: Output panel */}
+        <div className="hidden md:flex w-[420px] flex-col">
+          <OutputPanel state={projectState} />
+        </div>
       </div>
     </div>
   );

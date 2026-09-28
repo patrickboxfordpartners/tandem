@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { api } from "@/lib/api";
 import { MessageBubble } from "./MessageBubble";
 import { ApprovalCard } from "./ApprovalCard";
-import { AgentStatusCard } from "./AgentStatusCard";
 import { Send } from "lucide-react";
 
 interface Message {
@@ -18,18 +17,20 @@ interface Message {
 
 interface ChatProps {
   onProjectComplete?: () => void;
+  onStateChange?: (state: import("../App").ProjectState) => void;
 }
 
-export function Chat({ onProjectComplete }: ChatProps = {}) {
+export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
   const [messages, setMessages] = useState<Message[]>([{
     id: "welcome",
     role: "agent",
     agent: "Tandem",
-    content: "Tell me what you want to build. I'll provision the infrastructure, set up payments, configure email, and deploy a working product. All in under two minutes.",
+    content: "I'm your AI technical co-founder. Tell me what you want to build and I'll ask a few questions to make sure we get it right. Then I'll provision the infrastructure, set up payments, configure email, and deploy a working product.",
   }]);
   const [input, setInput] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"idle" | "planning" | "approval" | "executing" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "chatting" | "planning" | "approval" | "executing" | "done">("idle");
+  const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -43,16 +44,11 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
       const data = await api<any>(`/api/projects/${id}`);
       const runs = data.runs || [];
 
-      setMessages((prev) => {
-        const filtered = prev.filter((m) => m.type !== "status");
-        return [...filtered, {
-          id: "status-" + Date.now(),
-          role: "agent" as const,
-          type: "status" as const,
-          content: "",
-          runs,
-          orchestrationId: data.brainbase_orchestration_id,
-        }];
+      onStateChange?.({
+        phase: "executing",
+        runs,
+        orchestrationId: data.brainbase_orchestration_id,
+        name: data.name,
       });
 
       const allDone = runs.length > 0 && runs.every((r: any) => r.status === "completed" || r.status === "failed");
@@ -73,11 +69,20 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
           role: "agent" as const,
           agent: "Tandem",
           content: output.length > 0
-            ? `Your project is live (${elapsed}s):\n\n` + output.join("\n")
+            ? `Done in ${elapsed}s. Check the output panel for your live links.`
             : `Project provisioning complete (${elapsed}s).`,
           type: "result" as const,
         }]);
         setPhase("done");
+        onStateChange?.({
+          phase: "done",
+          runs,
+          orchestrationId: data.brainbase_orchestration_id,
+          name: data.name,
+          workerUrl: data.worker_url,
+          checkoutUrl: data.stripe_checkout_url,
+          emailSent: !!data.email_sent,
+        });
         onProjectComplete?.();
       }
     } catch {
@@ -86,37 +91,62 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim() || phase !== "idle") return;
-    const brief = input.trim();
+    if (!input.trim() || loading) return;
+    const text = input.trim();
     setInput("");
 
     setMessages((prev) => [...prev, {
       id: "user-" + Date.now(),
       role: "user",
-      content: brief,
+      content: text,
     }]);
 
-    setPhase("planning");
+    setLoading(true);
 
     try {
-      const { id } = await api<{ id: string }>("/api/projects", {
-        method: "POST",
-        body: JSON.stringify({ brief }),
-      });
-      setProjectId(id);
+      if (!projectId) {
+        // First message: create project and start conversation
+        const { id } = await api<{ id: string }>("/api/projects", {
+          method: "POST",
+          body: JSON.stringify({ brief: text }),
+        });
+        setProjectId(id);
+        setPhase("chatting");
+        onStateChange?.({ phase: "chatting" });
 
-      const planResult = await api<{ plan: { name: string; tasks: string[] } }>(`/api/projects/${id}/plan`, {
-        method: "POST",
-      });
+        // Get first response from co-founder
+        const chatResult = await api<{ response: string; ready: boolean }>(`/api/projects/${id}/chat`, {
+          method: "POST",
+        });
 
-      setMessages((prev) => [...prev, {
-        id: "plan-" + Date.now(),
-        role: "agent" as const,
-        type: "plan" as const,
-        content: "",
-        plan: planResult.plan,
-      }]);
-      setPhase("approval");
+        setMessages((prev) => [...prev, {
+          id: "agent-" + Date.now(),
+          role: "agent",
+          agent: "Tandem",
+          content: chatResult.response,
+        }]);
+
+        if (chatResult.ready) {
+          await generatePlan(id);
+        }
+      } else {
+        // Follow-up message: continue conversation
+        const chatResult = await api<{ response: string; ready: boolean }>(`/api/projects/${projectId}/chat`, {
+          method: "POST",
+          body: JSON.stringify({ message: text }),
+        });
+
+        setMessages((prev) => [...prev, {
+          id: "agent-" + Date.now(),
+          role: "agent",
+          agent: "Tandem",
+          content: chatResult.response,
+        }]);
+
+        if (chatResult.ready) {
+          await generatePlan(projectId);
+        }
+      }
     } catch (err: any) {
       setMessages((prev) => [...prev, {
         id: "error-" + Date.now(),
@@ -124,8 +154,34 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
         agent: "Tandem",
         content: "Something went wrong: " + err.message,
       }]);
-      setPhase("idle");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const generatePlan = async (id: string) => {
+    setPhase("planning");
+    onStateChange?.({ phase: "planning" });
+
+    setMessages((prev) => [...prev, {
+      id: "planning-" + Date.now(),
+      role: "agent",
+      agent: "Tandem",
+      content: "Got it. Let me put together a plan...",
+    }]);
+
+    const planResult = await api<{ plan: { name: string; tasks: string[] } }>(`/api/projects/${id}/plan`, {
+      method: "POST",
+    });
+
+    setMessages((prev) => [...prev, {
+      id: "plan-" + Date.now(),
+      role: "agent" as const,
+      type: "plan" as const,
+      content: "",
+      plan: planResult.plan,
+    }]);
+    setPhase("approval");
   };
 
   const handleApprove = async () => {
@@ -145,7 +201,7 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
         agent: "Tandem",
         content: "Execution failed: " + err.message,
       }]);
-      setPhase("idle");
+      setPhase("chatting");
     }
   };
 
@@ -158,12 +214,16 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
       id: "welcome",
       role: "agent",
       agent: "Tandem",
-      content: "Tell me what you want to build. I'll provision the infrastructure, set up payments, configure email, and deploy a working product. All in under two minutes.",
+      content: "I'm your AI technical co-founder. Tell me what you want to build and I'll ask a few questions to make sure we get it right. Then I'll provision the infrastructure, set up payments, configure email, and deploy a working product.",
     }]);
     setPhase("idle");
     setProjectId(null);
+    setLoading(false);
     startTimeRef.current = 0;
+    onStateChange?.({ phase: "idle" });
   };
+
+  const canType = (phase === "idle" || phase === "chatting" || phase === "done") && !loading;
 
   return (
     <div className="flex-1 flex flex-col">
@@ -172,11 +232,20 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
           if (msg.type === "plan" && msg.plan) {
             return <ApprovalCard key={msg.id} plan={msg.plan} onApprove={handleApprove} loading={phase === "executing"} />;
           }
-          if (msg.type === "status" && msg.runs) {
-            return <AgentStatusCard key={msg.id} runs={msg.runs} orchestrationId={msg.orchestrationId} />;
-          }
           return <MessageBubble key={msg.id} role={msg.role} agent={msg.agent} content={msg.content} />;
         })}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-zinc-800/80 backdrop-blur-sm border border-zinc-700/30 rounded-2xl px-4 py-3">
+              <p className="text-xs text-indigo-400 font-medium mb-1">Tandem</p>
+              <div className="flex gap-1">
+                <div className="h-2 w-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                <div className="h-2 w-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                <div className="h-2 w-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+              </div>
+            </div>
+          </div>
+        )}
         {phase === "done" && (
           <div className="flex justify-start">
             <button
@@ -195,13 +264,13 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Describe what you want to build..."
-            disabled={phase !== "idle" && phase !== "done"}
+            placeholder={phase === "idle" ? "Tell me what you want to build..." : phase === "chatting" ? "Answer Tandem's questions..." : "Describe what you want to build..."}
+            disabled={!canType}
             className="flex-1 px-4 py-3 rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-zinc-700/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 disabled:opacity-50 transition-all"
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || (phase !== "idle" && phase !== "done")}
+            disabled={!input.trim() || !canType}
             className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:from-indigo-400 hover:to-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20 disabled:shadow-none"
           >
             <Send className="h-4 w-4" />
