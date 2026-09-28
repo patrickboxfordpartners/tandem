@@ -47,7 +47,13 @@ projects.post("/", async (c) => {
 
 projects.post("/:id/chat", async (c) => {
   const id = c.req.param("id");
-  const { message } = await c.req.json<{ message?: string }>();
+  let message: string | undefined;
+  try {
+    const body = await c.req.json<{ message?: string }>();
+    message = body.message;
+  } catch {
+    // empty body on first call is fine
+  }
   const project = await c.env.DB.prepare("SELECT * FROM projects WHERE id = ?").bind(id).first();
   if (!project) return c.json({ error: "Not found" }, 404);
 
