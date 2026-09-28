@@ -262,8 +262,19 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
         {phase === "done" && (
           <div className={`backdrop-blur-sm border rounded-2xl px-4 py-3 max-w-[95%] ${isDark ? "bg-zinc-800/80 border-zinc-700/30" : "bg-white/80 border-stone-200/60"}`}>
             <p className="text-xs text-indigo-500 font-medium mb-1">Tandem</p>
-            <p className={`text-sm ${isDark ? "text-zinc-300" : "text-zinc-600"}`}>
-              Your product is live. I'm still here -- tell me what you want to work on next. Update the pricing, add a feature, change the design, or plan the next phase.
+            <p className={`text-sm mb-3 ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
+              Your product is live. Here's what I'd recommend we tackle next:
+            </p>
+            <ol className={`text-sm space-y-2 mb-3 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>Full website buildout</strong> -- The landing page is live, but you'll want a multi-page site with about, contact, and detailed service pages.</li>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>Security and auth</strong> -- Client portal with login, document upload, and role-based access. SSL is handled, but you'll need auth (Clerk, Supabase Auth) and encrypted storage.</li>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>Integrations</strong> -- Connect Stripe webhooks for subscription lifecycle, wire Postmark for transactional emails (receipts, reminders), and set up a CRM for lead tracking.</li>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>AEO and SEO</strong> -- Your llms.txt and FAQ schema are deployed, but you need structured content, local SEO (Google Business Profile), and AI-optimized copy that gets cited in AI answers.</li>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>Technical partnerships</strong> -- Consider Cloudflare for CDN/DDoS, a database provider (Neon, Supabase), analytics (PostHog), and monitoring (Sentry).</li>
+              <li><strong className={isDark ? "text-zinc-200" : "text-zinc-800"}>Compliance</strong> -- Your privacy policy and terms are drafted, but you'll want a CPA or attorney to review them. If handling financial data, SOC 2 readiness should be on the roadmap.</li>
+            </ol>
+            <p className={`text-sm ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+              Tell me which of these you want to dig into and I'll build out the plan.
             </p>
           </div>
         )}
