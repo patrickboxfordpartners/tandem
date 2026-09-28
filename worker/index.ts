@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "./types";
+import { projects } from "./routes/projects";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -12,6 +13,8 @@ app.onError((err, c) => {
 app.use("/api/*", cors());
 
 app.get("/api/health", (c) => c.json({ ok: true, ts: new Date().toISOString() }));
+
+app.route("/api/projects", projects);
 
 app.all("*", async (c) => {
   const res = await c.env.ASSETS.fetch(c.req.raw);
