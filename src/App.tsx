@@ -70,17 +70,15 @@ export default function App() {
           </div>
         </header>
 
-        <div className="relative z-10 flex-1 flex min-h-0 overflow-hidden">
-          <div className={`w-[380px] flex-shrink-0 flex flex-col min-h-0 overflow-hidden border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}>
+        <div className="relative z-10 flex-1 flex" style={{ height: "calc(100dvh - 52px)", minHeight: 0 }}>
+          <div className={`w-[380px] flex-shrink-0 flex flex-col h-full border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}>
             <Chat
               onProjectComplete={() => setProjectCount((prev) => prev + 1)}
               onStateChange={setProjectState}
             />
           </div>
-          <div className="hidden md:flex flex-1 flex-col min-w-0 min-h-0">
-            <div className="flex-1 overflow-y-auto">
-              <OutputPanel state={projectState} />
-            </div>
+          <div className="hidden md:block flex-1 h-full overflow-y-auto">
+            <OutputPanel state={projectState} />
           </div>
         </div>
       </div>
