@@ -71,13 +71,13 @@ export default function App() {
         </header>
 
         <div className="relative z-10 flex-1 flex min-h-0">
-          <div className={`w-[380px] flex-shrink-0 flex flex-col border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}>
+          <div className={`w-[380px] flex-shrink-0 flex flex-col min-h-0 border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}>
             <Chat
               onProjectComplete={() => setProjectCount((prev) => prev + 1)}
               onStateChange={setProjectState}
             />
           </div>
-          <div className="hidden md:flex flex-1 flex-col min-w-0">
+          <div className="hidden md:flex flex-1 flex-col min-w-0 min-h-0 overflow-hidden">
             <OutputPanel state={projectState} />
           </div>
         </div>

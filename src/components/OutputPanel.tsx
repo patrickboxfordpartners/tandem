@@ -94,7 +94,7 @@ export function OutputPanel({ state }: { state: ProjectState }) {
   const hasLogs = state.logs && state.logs.length > 0;
   const isDone = state.phase === "done";
   const logEndRef = useRef<HTMLDivElement>(null);
-  const card = isDark ? "bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30" : "bg-white/60 backdrop-blur-sm border border-stone-200/60 shadow-sm";
+  const card = isDark ? "bg-zinc-800/50 backdrop-blur-sm border border-zinc-700/30" : "bg-white backdrop-blur-sm border border-stone-200 shadow-sm";
 
   const checklist = getChecklist(state);
   const completedCount = checklist.filter((c) => c.status === "done").length;
