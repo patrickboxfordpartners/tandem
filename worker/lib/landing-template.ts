@@ -78,8 +78,23 @@ h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:800;letter-spacing:-.03em;line-h
 .faq-item summary::after{content:"+";font-size:1.2rem;color:${muted};transition:transform .2s}
 .faq-item[open] summary::after{transform:rotate(45deg)}
 .faq-item p{padding:0 1.25rem 1.25rem;color:${muted};font-size:.9rem;line-height:1.7}
-footer{text-align:center;padding:3rem 2rem;border-top:1px solid ${footerBorder};color:${footerText};font-size:.8rem}
+.hiw{padding:4rem 2rem 6rem;max-width:800px;margin:0 auto}
+.hiw h2{text-align:center;font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:3rem}
+.hiw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;counter-reset:step}
+.hiw-step{text-align:center;counter-increment:step}
+.hiw-num{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:${accent};color:#fff;font-weight:700;font-size:1rem;margin-bottom:1rem}
+.hiw-step h3{font-size:1rem;font-weight:600;margin-bottom:.5rem}
+.hiw-step p{font-size:.85rem;color:${muted};line-height:1.6}
+.diff{padding:2rem 2rem 4rem;max-width:800px;margin:0 auto;text-align:center}
+.diff h2{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-bottom:2rem}
+.diff-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem}
+.diff-item{padding:.75rem 1.5rem;border-radius:100px;background:${accent}12;border:1px solid ${accent}25;font-size:.85rem;color:${accent}}
+.trust{text-align:center;padding:2rem 2rem 4rem;max-width:600px;margin:0 auto}
+.trust p{font-size:.85rem;color:${muted};line-height:1.8}
+footer{text-align:center;padding:2rem 2rem;border-top:1px solid ${footerBorder};color:${footerText};font-size:.75rem}
 footer a{color:${accent};text-decoration:none}
+footer .foot-links{margin-bottom:.75rem}
+footer .foot-links a{margin:0 .75rem}
 </style>
 </head>
 <body>
@@ -90,16 +105,29 @@ footer a{color:${accent};text-decoration:none}
 <div class="hero-inner">
 <div class="badge">Now Live</div>
 <h1>${esc(spec.name)}</h1>
+${spec.tagline ? `<p style="font-size:1.1rem;color:${accent};font-weight:500;margin-bottom:1rem;letter-spacing:-.01em;">${esc(spec.tagline)}</p>` : ""}
 <p class="tagline">${esc(spec.description)}</p>
 <a class="cta" href="${esc(ctaHref)}">${esc(ctaText)}</a>
 </div>
 </section>
+${spec.howItWorks && spec.howItWorks.length > 0 ? `<section class="hiw">
+<h2>How it works</h2>
+<div class="hiw-grid">
+${spec.howItWorks.map((s, i) => `<div class="hiw-step"><div class="hiw-num">${i + 1}</div><h3>${esc(s.step)}</h3><p>${esc(s.detail)}</p></div>`).join("\n")}
+</div>
+</section>` : ""}
 <section class="features">
 <h2>Everything you need</h2>
 <div class="feat-grid">
 ${spec.features.map((f, i) => `<div class="feat"><div class="feat-icon">${featureIcons[i % featureIcons.length]}</div><div class="feat-text">${esc(f)}</div></div>`).join("\n")}
 </div>
 </section>
+${spec.differentiators && spec.differentiators.length > 0 ? `<section class="diff">
+<h2>Why ${esc(spec.name)}</h2>
+<div class="diff-grid">
+${spec.differentiators.map((d) => `<div class="diff-item">${esc(d)}</div>`).join("\n")}
+</div>
+</section>` : ""}
 <section class="pricing">
 <div class="price-tag">${esc(price)}</div>
 <div class="price-sub">Cancel anytime. No hidden fees.</div>
@@ -111,7 +139,13 @@ ${spec.faq && spec.faq.length > 0 ? `<section class="faq">
 ${spec.faq.map((item) => `<details class="faq-item"><summary>${esc(item.q)}</summary><p>${esc(item.a)}</p></details>`).join("\n")}
 </div>
 </section>` : ""}
-<footer>Launched with <a href="https://tandem.boxfordpartners.com">Tandem</a></footer>
+<section class="trust">
+<p>Your data is protected with enterprise-grade encryption. We use Stripe for secure payment processing and never store sensitive financial information on our servers.</p>
+</section>
+<footer>
+<div class="foot-links"><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/agreement">Agreement</a></div>
+Launched with <a href="https://tandem.boxfordpartners.com">Tandem</a>
+</footer>
 ${spec.faq && spec.faq.length > 0 ? `<script type="application/ld+json">
 ${JSON.stringify({
   "@context": "https://schema.org",

@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { Chat } from "./components/Chat";
 import { OutputPanel } from "./components/OutputPanel";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, PanelRightOpen, MessageSquare } from "lucide-react";
 
 export interface ProjectState {
   workerUrl?: string;
@@ -22,6 +22,7 @@ export const useTheme = () => useContext(ThemeContext);
 export default function App() {
   const [projectCount, setProjectCount] = useState(0);
   const [projectState, setProjectState] = useState<ProjectState>({ phase: "idle" });
+  const [mobilePanel, setMobilePanel] = useState<"chat" | "output">("chat");
   const [theme, setTheme] = useState<"dark" | "light">(() => {
     if (typeof window !== "undefined") {
       return (localStorage.getItem("tandem-theme") as "dark" | "light") || "dark";
@@ -52,21 +53,28 @@ export default function App() {
           />
         </div>
 
-        {/* Header - fixed height */}
+        {/* Header */}
         <header
-          className={`relative z-10 px-6 border-b backdrop-blur-md flex items-center gap-3 ${isDark ? "border-zinc-800/60 bg-zinc-950/70" : "border-stone-200/80 bg-white/70"}`}
+          className={`relative z-10 px-4 md:px-6 border-b backdrop-blur-md flex items-center gap-2 md:gap-3 ${isDark ? "border-zinc-800/60 bg-zinc-950/70" : "border-stone-200/80 bg-white/70"}`}
           style={{ height: 52 }}
         >
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-indigo-500/25">T</div>
-          <h1 className="text-xl font-bold tracking-tight">Tandem</h1>
-          <span className={`text-xs font-light tracking-tight ${isDark ? "text-zinc-500" : "text-stone-400"}`}>Your AI technical co-founder</span>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-indigo-500/25 flex-shrink-0">T</div>
+          <h1 className="text-lg md:text-xl font-bold tracking-tight">Tandem</h1>
+          <span className={`hidden sm:inline text-xs font-light tracking-tight ${isDark ? "text-zinc-500" : "text-stone-400"}`}>Your AI technical co-founder</span>
+          <div className="ml-auto flex items-center gap-2 md:gap-3">
+            {/* Mobile panel toggle */}
+            <button
+              onClick={() => setMobilePanel(mobilePanel === "chat" ? "output" : "chat")}
+              className={`md:hidden p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-stone-200 text-stone-400"}`}
+            >
+              {mobilePanel === "chat" ? <PanelRightOpen className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+            </button>
             {projectCount > 0 && (
-              <span className={`text-xs font-mono ${isDark ? "text-zinc-600" : "text-stone-400"}`}>
+              <span className={`hidden sm:inline text-xs font-mono ${isDark ? "text-zinc-600" : "text-stone-400"}`}>
                 {projectCount} launched
               </span>
             )}
-            <span className={`hidden sm:inline text-[10px] ${isDark ? "text-zinc-600" : "text-stone-400"}`}>Brainbase + Anthropic + Cloudflare + Stripe</span>
+            <span className={`hidden lg:inline text-[10px] ${isDark ? "text-zinc-600" : "text-stone-400"}`}>Brainbase + Anthropic + Cloudflare + Stripe</span>
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
               className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-zinc-800 text-zinc-500" : "hover:bg-stone-200 text-stone-400"}`}
@@ -76,20 +84,31 @@ export default function App() {
           </div>
         </header>
 
-        {/* Main area - fixed position, fills below header */}
+        {/* Main area */}
         <div className="z-10" style={{ position: "fixed", top: 52, bottom: 0, left: 0, right: 0, display: "flex" }}>
-          {/* Chat column */}
+          {/* Chat column -- full width on mobile, 380px on desktop */}
           <div
-            className={`border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}
-            style={{ width: 380, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}
+            className={`border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"} ${mobilePanel === "chat" ? "flex" : "hidden"} md:flex`}
+            style={{ width: "100%", maxWidth: "100%", height: "100%", flexDirection: "column", overflow: "hidden" }}
           >
-            <Chat
-              onProjectComplete={() => setProjectCount((prev) => prev + 1)}
-              onStateChange={setProjectState}
-            />
+            <div className="hidden md:block" style={{ width: 380, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <Chat
+                onProjectComplete={() => setProjectCount((prev) => prev + 1)}
+                onStateChange={setProjectState}
+              />
+            </div>
+            <div className="md:hidden" style={{ height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+              <Chat
+                onProjectComplete={() => setProjectCount((prev) => prev + 1)}
+                onStateChange={setProjectState}
+              />
+            </div>
           </div>
-          {/* Output column */}
-          <div style={{ flex: 1, height: "100%", overflowY: "auto" }}>
+          {/* Output column -- hidden on mobile unless toggled, flex on desktop */}
+          <div
+            className={`${mobilePanel === "output" ? "block" : "hidden"} md:block`}
+            style={{ flex: 1, height: "100%", overflowY: "auto" }}
+          >
             <OutputPanel state={projectState} />
           </div>
         </div>
