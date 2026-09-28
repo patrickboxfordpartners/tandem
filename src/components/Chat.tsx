@@ -231,8 +231,8 @@ export function Chat({ onProjectComplete, onStateChange }: ChatProps = {}) {
   const isDark = theme === "dark";
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <div className="p-6 space-y-4" style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         {messages.map((msg) => {
           if (msg.type === "plan" && msg.plan) {
             return <ApprovalCard key={msg.id} plan={msg.plan} onApprove={handleApprove} loading={phase === "executing"} />;

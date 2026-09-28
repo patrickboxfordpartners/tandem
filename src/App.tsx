@@ -75,11 +75,11 @@ export default function App() {
         </header>
 
         {/* Main area - fixed position, fills below header */}
-        <div className="fixed left-0 right-0 z-10 flex" style={{ top: 52, bottom: 0 }}>
+        <div className="z-10" style={{ position: "fixed", top: 52, bottom: 0, left: 0, right: 0, display: "flex" }}>
           {/* Chat column */}
           <div
-            className={`flex flex-col border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}
-            style={{ width: 380 }}
+            className={`border-r ${isDark ? "border-zinc-800/40" : "border-stone-200/60"}`}
+            style={{ width: 380, height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}
           >
             <Chat
               onProjectComplete={() => setProjectCount((prev) => prev + 1)}
@@ -87,7 +87,7 @@ export default function App() {
             />
           </div>
           {/* Output column */}
-          <div className="hidden md:block" style={{ flex: 1, overflowY: "auto" }}>
+          <div style={{ flex: 1, height: "100%", overflowY: "auto" }}>
             <OutputPanel state={projectState} />
           </div>
         </div>
