@@ -30,9 +30,7 @@ function buildEmailHtml(spec: ProjectSpec): string {
 
 <!-- Body -->
 <tr><td style="padding:40px;">
-<p style="margin:0 0 20px;color:${text};font-size:16px;line-height:1.7;">
-${spec.welcomeEmail?.body || `Thanks for joining ${spec.name}. We're excited to have you on board.`}
-</p>
+${(spec.welcomeEmail?.body || `Thanks for joining ${spec.name}. We're excited to have you on board.`).split(/\n\n|\n/).filter(Boolean).map((p: string) => `<p style="margin:0 0 16px;color:${text};font-size:16px;line-height:1.7;">${p.trim()}</p>`).join("\n")}
 
 <!-- Features -->
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
@@ -72,6 +70,7 @@ export async function runCommsAgent(projectId: string, spec: ProjectSpec, env: E
   if (!spec.welcomeEmail) return { emailSent: false };
 
   const htmlBody = buildEmailHtml(spec);
+  const recipient = spec.ownerEmail || "patrick@boxfordpartners.com";
 
   const res = await fetch("https://api.postmarkapp.com/email", {
     method: "POST",
@@ -82,8 +81,8 @@ export async function runCommsAgent(projectId: string, spec: ProjectSpec, env: E
     },
     body: JSON.stringify({
       From: "hello@boxfordpartners.com",
-      To: "patrick@boxfordpartners.com",
-      Subject: `[Tandem] ${spec.welcomeEmail.subject}`,
+      To: recipient,
+      Subject: `Welcome to ${spec.name}`,
       HtmlBody: htmlBody,
       TextBody: spec.welcomeEmail.body,
       MessageStream: "outbound",
