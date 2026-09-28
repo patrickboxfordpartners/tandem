@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { Env } from "./types";
 import { projects } from "./routes/projects";
+import { getOrchestrationGraph } from "./lib/brainbase";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -13,6 +14,8 @@ app.onError((err, c) => {
 app.use("/api/*", cors());
 
 app.get("/api/health", (c) => c.json({ ok: true, ts: new Date().toISOString() }));
+
+app.get("/api/brainbase", (c) => c.json(getOrchestrationGraph()));
 
 app.route("/api/projects", projects);
 

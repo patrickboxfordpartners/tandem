@@ -5,6 +5,7 @@ import { runPaymentsAgent } from "../agents/payments";
 import { runCommsAgent } from "../agents/comms";
 import { runDeployerAgent } from "../agents/deployer";
 import { postToSlack } from "../lib/slack";
+import { BRAINBASE_AGENTS, BRAINBASE_ORCHESTRATION_ID } from "../lib/brainbase";
 
 export async function executeAgents(projectId: string, spec: ProjectSpec, env: Env): Promise<void> {
   const updateRun = async (agent: string, status: string, output?: string, error?: string) => {
@@ -18,7 +19,7 @@ export async function executeAgents(projectId: string, spec: ProjectSpec, env: E
   let workerUrl = "";
   let checkoutUrl = "";
 
-  await postToSlack(env, `🚀 Starting deployment for "${spec.name}"`);
+  await postToSlack(env, `🚀 Brainbase orchestration ${BRAINBASE_ORCHESTRATION_ID.slice(0, 8)}... dispatching agents for "${spec.name}"`);
 
   // Phase 1: Infra + Payments + Comms in parallel
   const [infraResult, paymentsResult, commsResult] = await Promise.allSettled([

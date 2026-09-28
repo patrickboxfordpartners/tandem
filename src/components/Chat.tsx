@@ -12,7 +12,8 @@ interface Message {
   content: string;
   type?: "text" | "plan" | "status" | "result";
   plan?: { name: string; tasks: string[] };
-  runs?: Array<{ agent: string; status: string; output?: string }>;
+  runs?: Array<{ agent: string; status: string; output?: string; brainbase_agent_id?: string }>;
+  orchestrationId?: string;
 }
 
 interface ChatProps {
@@ -50,6 +51,7 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
           type: "status" as const,
           content: "",
           runs,
+          orchestrationId: data.brainbase_orchestration_id,
         }];
       });
 
@@ -171,7 +173,7 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
             return <ApprovalCard key={msg.id} plan={msg.plan} onApprove={handleApprove} loading={phase === "executing"} />;
           }
           if (msg.type === "status" && msg.runs) {
-            return <AgentStatusCard key={msg.id} runs={msg.runs} />;
+            return <AgentStatusCard key={msg.id} runs={msg.runs} orchestrationId={msg.orchestrationId} />;
           }
           return <MessageBubble key={msg.id} role={msg.role} agent={msg.agent} content={msg.content} />;
         })}

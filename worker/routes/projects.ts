@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../types";
 import { runPlanner, type ProjectSpec } from "../agents/planner";
+import { BRAINBASE_AGENTS, BRAINBASE_ORCHESTRATION_ID } from "../lib/brainbase";
 
 const projects = new Hono<{ Bindings: Env }>();
 
@@ -80,7 +81,16 @@ projects.get("/:id", async (c) => {
     "SELECT * FROM agent_runs WHERE project_id = ? ORDER BY created_at ASC"
   ).bind(id).all();
 
-  return c.json({ ...project, runs: runs || [] });
+  const enrichedRuns = (runs || []).map((run: any) => ({
+    ...run,
+    brainbase_agent_id: BRAINBASE_AGENTS[run.agent as keyof typeof BRAINBASE_AGENTS]?.id || null,
+  }));
+
+  return c.json({
+    ...project,
+    runs: enrichedRuns,
+    brainbase_orchestration_id: BRAINBASE_ORCHESTRATION_ID,
+  });
 });
 
 projects.post("/:id/approve", async (c) => {

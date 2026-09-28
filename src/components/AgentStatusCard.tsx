@@ -2,6 +2,7 @@ interface AgentRun {
   agent: string;
   status: string;
   output?: string;
+  brainbase_agent_id?: string;
 }
 
 const AGENT_LABELS: Record<string, string> = {
@@ -42,10 +43,15 @@ function getAgentSummary(agent: string, output?: string): string | null {
   }
 }
 
-export function AgentStatusCard({ runs }: { runs: AgentRun[] }) {
+export function AgentStatusCard({ runs, orchestrationId }: { runs: AgentRun[]; orchestrationId?: string }) {
   return (
     <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-5 max-w-[80%]">
-      <p className="text-xs text-indigo-400 font-medium mb-3">Agent Team</p>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="text-xs text-indigo-400 font-medium">Agent Team</p>
+        {orchestrationId && (
+          <span className="text-[10px] text-zinc-600 font-mono">Brainbase {orchestrationId.slice(0, 8)}</span>
+        )}
+      </div>
       <div className="space-y-2">
         {runs.map((run) => {
           const summary = run.status === "completed" ? getAgentSummary(run.agent, run.output) : null;
@@ -58,7 +64,12 @@ export function AgentStatusCard({ runs }: { runs: AgentRun[] }) {
                   run.status === "completed" ? "bg-emerald-400" :
                   run.status === "failed" ? "bg-red-400" : "bg-zinc-600"
                 }`} />
-                <span className="text-sm text-zinc-300 flex-1">{AGENT_LABELS[run.agent] || run.agent}</span>
+                <span className="text-sm text-zinc-300 flex-1">
+                  {AGENT_LABELS[run.agent] || run.agent}
+                  {run.brainbase_agent_id && (
+                    <span className="text-[10px] text-zinc-600 font-mono ml-1.5">{run.brainbase_agent_id.slice(0, 8)}</span>
+                  )}
+                </span>
                 <span className={`text-xs font-mono ${STATUS_COLORS[run.status] || "text-zinc-500"}`}>
                   {run.status}
                 </span>

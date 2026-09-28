@@ -10,12 +10,11 @@ export default function App() {
         <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center text-sm font-bold">T</div>
         <h1 className="text-lg font-semibold tracking-tight">Tandem</h1>
         <span className="text-xs text-zinc-500">Your AI technical co-founder</span>
+        <span className="text-[10px] text-zinc-600 ml-auto mr-2">Powered by Brainbase + Anthropic + Cloudflare + Stripe</span>
         {projectCount > 0 && (
-          <div className="ml-auto">
-            <span className="text-xs text-zinc-600 font-mono">
-              {projectCount} {projectCount === 1 ? "project" : "projects"} launched
-            </span>
-          </div>
+          <span className="text-xs text-zinc-600 font-mono">
+            {projectCount} {projectCount === 1 ? "project" : "projects"} launched
+          </span>
         )}
       </header>
       <Chat onProjectComplete={() => setProjectCount((prev) => prev + 1)} />
