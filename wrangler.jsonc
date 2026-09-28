@@ -1,0 +1,17 @@
+{
+  "name": "tandem",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-09-28",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tandem",
+      "database_id": "2911c24e-6cf4-4be7-acc5-acf223da39cf"
+    }
+  ]
+}
