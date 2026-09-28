@@ -15,18 +15,23 @@ interface Message {
   runs?: Array<{ agent: string; status: string; output?: string }>;
 }
 
-export function Chat() {
+interface ChatProps {
+  onProjectComplete?: () => void;
+}
+
+export function Chat({ onProjectComplete }: ChatProps = {}) {
   const [messages, setMessages] = useState<Message[]>([{
     id: "welcome",
     role: "agent",
     agent: "Tandem",
-    content: "Describe what you want to build. I'll handle the infrastructure, payments, email, and deployment.",
+    content: "Tell me what you want to build. I'll provision the infrastructure, set up payments, configure email, and deploy a working product. All in under two minutes.",
   }]);
   const [input, setInput] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "planning" | "approval" | "executing" | "done">("idle");
   const bottomRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -52,6 +57,10 @@ export function Chat() {
       if (allDone || data.status === "deployed" || data.status === "failed") {
         if (pollRef.current) clearInterval(pollRef.current);
 
+        const elapsed = startTimeRef.current > 0
+          ? ((Date.now() - startTimeRef.current) / 1000).toFixed(1)
+          : "0.0";
+
         const output: string[] = [];
         if (data.worker_url) output.push("Site: " + data.worker_url);
         if (data.stripe_checkout_url) output.push("Checkout: " + data.stripe_checkout_url);
@@ -62,11 +71,12 @@ export function Chat() {
           role: "agent" as const,
           agent: "Tandem",
           content: output.length > 0
-            ? "Your project is live:\n\n" + output.join("\n")
-            : "Project provisioning complete.",
+            ? `Your project is live (${elapsed}s):\n\n` + output.join("\n")
+            : `Project provisioning complete (${elapsed}s).`,
           type: "result" as const,
         }]);
         setPhase("done");
+        onProjectComplete?.();
       }
     } catch {
       // poll failed, keep trying
@@ -119,6 +129,7 @@ export function Chat() {
   const handleApprove = async () => {
     if (!projectId) return;
     setPhase("executing");
+    startTimeRef.current = Date.now();
 
     try {
       await api(`/api/projects/${projectId}/approve`, { method: "POST" });
@@ -140,6 +151,18 @@ export function Chat() {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
+  const handleReset = () => {
+    setMessages([{
+      id: "welcome",
+      role: "agent",
+      agent: "Tandem",
+      content: "Tell me what you want to build. I'll provision the infrastructure, set up payments, configure email, and deploy a working product. All in under two minutes.",
+    }]);
+    setPhase("idle");
+    setProjectId(null);
+    startTimeRef.current = 0;
+  };
+
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -152,6 +175,16 @@ export function Chat() {
           }
           return <MessageBubble key={msg.id} role={msg.role} agent={msg.agent} content={msg.content} />;
         })}
+        {phase === "done" && (
+          <div className="flex justify-start">
+            <button
+              onClick={handleReset}
+              className="text-sm text-indigo-400 hover:text-indigo-300 underline transition-colors"
+            >
+              Start another project
+            </button>
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
       <div className="p-4 border-t border-zinc-800">
