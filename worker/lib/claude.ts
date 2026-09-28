@@ -12,7 +12,7 @@ export async function callClaude(
 ): Promise<string> {
   const body: any = {
     model: "claude-sonnet-5",
-    max_tokens: options?.maxTokens || 16000,
+    max_tokens: options?.maxTokens || 8000,
     thinking: { type: "adaptive" },
     messages,
   };

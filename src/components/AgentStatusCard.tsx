@@ -45,7 +45,7 @@ function getAgentSummary(agent: string, output?: string): string | null {
 
 export function AgentStatusCard({ runs, orchestrationId }: { runs: AgentRun[]; orchestrationId?: string }) {
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-2xl p-5 max-w-[80%]">
+    <div className="bg-zinc-800/80 backdrop-blur-sm border border-zinc-700/30 rounded-2xl p-5 max-w-[80%]">
       <div className="flex items-center gap-2 mb-3">
         <p className="text-xs text-indigo-400 font-medium">Agent Team</p>
         {orchestrationId && (

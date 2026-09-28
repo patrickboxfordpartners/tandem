@@ -189,7 +189,7 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
         )}
         <div ref={bottomRef} />
       </div>
-      <div className="p-4 border-t border-zinc-800">
+      <div className="p-4 border-t border-zinc-800/60 backdrop-blur-md bg-zinc-950/50">
         <div className="flex gap-2 max-w-3xl mx-auto">
           <input
             value={input}
@@ -197,12 +197,12 @@ export function Chat({ onProjectComplete }: ChatProps = {}) {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
             placeholder="Describe what you want to build..."
             disabled={phase !== "idle" && phase !== "done"}
-            className="flex-1 px-4 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 disabled:opacity-50"
+            className="flex-1 px-4 py-3 rounded-xl bg-zinc-800/70 backdrop-blur-sm border border-zinc-700/50 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 disabled:opacity-50 transition-all"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || (phase !== "idle" && phase !== "done")}
-            className="px-4 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+            className="px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:from-indigo-400 hover:to-violet-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-500/20 disabled:shadow-none"
           >
             <Send className="h-4 w-4" />
           </button>
