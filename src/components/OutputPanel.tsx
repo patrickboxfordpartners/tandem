@@ -10,6 +10,7 @@ const AGENT_LABELS: Record<string, string> = {
   legal: "Legal",
   seo: "SEO",
   research: "Research",
+  contracts: "Contracts",
   deployer: "Deployer",
   orchestrator: "Orchestrator",
 };
@@ -69,6 +70,11 @@ function getChecklist(state: ProjectState): ChecklistItem[] {
       label: "Competitive research",
       status: agentStatus("research") === "completed" ? "done" : agentStatus("research") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
       detail: agentStatus("research") === "completed" ? "Landscape brief ready" : agentStatus("research") === "running" ? "Analyzing competitors via Claude" : undefined,
+    },
+    {
+      label: "Draft service agreement",
+      status: agentStatus("contracts") === "completed" ? "done" : agentStatus("contracts") === "running" ? "active" : phase === "executing" ? "pending" : "pending",
+      detail: agentStatus("contracts") === "completed" ? "Agreement at /agreement" : agentStatus("contracts") === "running" ? "Drafting via Claude" : undefined,
     },
     {
       label: "Final deployment",

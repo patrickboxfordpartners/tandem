@@ -31,6 +31,10 @@ export const BRAINBASE_AGENTS = {
     id: "0dfa3bee-5bef-4a78-8718-154457dd52c0",
     title: "Research",
   },
+  contracts: {
+    id: "eda8ce9b-2746-4a7a-aa2e-60be89abe664",
+    title: "Contracts",
+  },
   deployer: {
     id: "b91a3d0c-4409-4450-8c7b-e372bb8bfc91",
     title: "Deployer",
@@ -48,6 +52,7 @@ export const BRAINBASE_EDGES = [
   { from: "payments", to: "deployer", description: "Payments passes checkout URL to Deployer" },
   { from: "legal", to: "deployer", description: "Legal passes privacy policy and terms to Deployer" },
   { from: "seo", to: "deployer", description: "SEO passes robots.txt and sitemap to Deployer" },
+  { from: "contracts", to: "deployer", description: "Contracts passes service agreement to Deployer" },
 ];
 
 export function getOrchestrationGraph() {

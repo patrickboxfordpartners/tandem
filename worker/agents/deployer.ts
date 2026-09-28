@@ -2,6 +2,7 @@ import type { Env } from "../types";
 import type { ProjectSpec } from "./planner";
 import type { LegalResult } from "./legal";
 import type { SeoResult } from "./seo";
+import type { ContractsResult } from "./contracts";
 import { buildLandingHtml } from "../lib/landing-template";
 
 export async function runDeployerAgent(
@@ -12,6 +13,7 @@ export async function runDeployerAgent(
   env: Env,
   legal?: LegalResult | null,
   seo?: SeoResult | null,
+  contracts?: ContractsResult | null,
 ): Promise<void> {
   const landingHtml = buildLandingHtml(spec, checkoutUrl);
 
@@ -53,6 +55,10 @@ a{color:${accent};text-decoration:none}.back{display:inline-block;margin-bottom:
     ? docPageTemplate("Terms of Service", legal.termsOfService)
     : docPageTemplate("Terms of Service", "<p>Terms of service coming soon.</p>");
 
+  const agreementHtml = contracts?.agreementHtml
+    ? docPageTemplate("Service Agreement", contracts.agreementHtml)
+    : docPageTemplate("Service Agreement", "<p>Service agreement coming soon.</p>");
+
   const robotsTxt = seo?.robotsTxt || "User-agent: *\nAllow: /";
   const sitemapXml = seo?.sitemapXml || "";
 
@@ -62,6 +68,7 @@ a{color:${accent};text-decoration:none}.back{display:inline-block;margin-bottom:
     const path = url.pathname;
     if (path === "/api/health") return Response.json({ ok: true, name: ${JSON.stringify(spec.name)} });
     if (path === "/privacy") return new Response(${JSON.stringify(privacyHtml)}, { headers: { "Content-Type": "text/html" } });
+    if (path === "/agreement") return new Response(${JSON.stringify(agreementHtml)}, { headers: { "Content-Type": "text/html" } });
     if (path === "/terms") return new Response(${JSON.stringify(termsHtml)}, { headers: { "Content-Type": "text/html" } });
     if (path === "/robots.txt") return new Response(${JSON.stringify(robotsTxt)}, { headers: { "Content-Type": "text/plain" } });
     if (path === "/sitemap.xml") return new Response(${JSON.stringify(sitemapXml)}, { headers: { "Content-Type": "application/xml" } });

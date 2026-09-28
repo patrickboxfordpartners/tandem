@@ -6,6 +6,7 @@ import { runCommsAgent } from "../agents/comms";
 import { runLegalAgent, type LegalResult } from "../agents/legal";
 import { runSeoAgent, type SeoResult } from "../agents/seo";
 import { runResearchAgent, type ResearchResult } from "../agents/research";
+import { runContractsAgent, type ContractsResult } from "../agents/contracts";
 import { runDeployerAgent } from "../agents/deployer";
 import { postToSlack } from "../lib/slack";
 import { BRAINBASE_ORCHESTRATION_ID } from "../lib/brainbase";
@@ -31,8 +32,9 @@ export async function executeAgents(projectId: string, spec: ProjectSpec, env: E
   let legalDocs: LegalResult | null = null;
   let seoDocs: SeoResult | null = null;
   let researchBrief: ResearchResult | null = null;
+  let contractDocs: ContractsResult | null = null;
 
-  await log("orchestrator", `Brainbase orchestration ${BRAINBASE_ORCHESTRATION_ID.slice(0, 8)} dispatching 7 agents for "${spec.name}"`);
+  await log("orchestrator", `Brainbase orchestration ${BRAINBASE_ORCHESTRATION_ID.slice(0, 8)} dispatching 8 agents for "${spec.name}"`);
   await postToSlack(env, `Dispatching 7 agents for "${spec.name}"`);
 
   // Phase 1: All specialist agents in parallel
@@ -135,16 +137,31 @@ export async function executeAgents(projectId: string, spec: ProjectSpec, env: E
         throw err;
       }
     })(),
+    (async () => {
+      await updateRun("contracts", "running");
+      await log("contracts", `Drafting service agreement for "${spec.name}" via Claude`);
+      try {
+        const result = await runContractsAgent(projectId, spec, env);
+        contractDocs = result;
+        await updateRun("contracts", "completed", JSON.stringify({ generated: true }));
+        await log("contracts", "Service agreement generated -- will deploy at /agreement route");
+        return result;
+      } catch (err: any) {
+        await updateRun("contracts", "failed", null, err.message);
+        await log("contracts", `Failed: ${err.message}`);
+        throw err;
+      }
+    })(),
   ]);
 
   // Phase 2: Deployer rebuilds with all assets
   await updateRun("deployer", "running");
   try {
     if (workerName && infraResult.status === "fulfilled") {
-      await log("deployer", `Redeploying "${workerName}" with checkout URL, legal docs, SEO, and all routes`);
-      await runDeployerAgent(projectId, spec, checkoutUrl, workerName, env, legalDocs, seoDocs);
+      await log("deployer", `Redeploying "${workerName}" with checkout URL, legal docs, SEO, contracts, and all routes`);
+      await runDeployerAgent(projectId, spec, checkoutUrl, workerName, env, legalDocs, seoDocs, contractDocs);
       await updateRun("deployer", "completed", JSON.stringify({ redeployed: true }));
-      await log("deployer", "Final deploy complete -- /privacy, /terms, /robots.txt, /sitemap.xml, /llms.txt all live");
+      await log("deployer", "Final deploy complete -- /privacy, /terms, /agreement, /robots.txt, /sitemap.xml, /llms.txt all live");
     } else {
       await updateRun("deployer", "completed", JSON.stringify({ redeployed: false, reason: "infra failed" }));
       await log("deployer", "Skipped: infrastructure agent did not complete");
