@@ -1,5 +1,6 @@
 import type { Env } from "../types";
 import type { ProjectSpec } from "../agents/planner";
+import { runInfraAgent } from "../agents/infra";
 
 export async function executeAgents(projectId: string, spec: ProjectSpec, env: Env): Promise<void> {
   const updateRun = async (agent: string, status: string, output?: string, error?: string) => {
@@ -13,8 +14,13 @@ export async function executeAgents(projectId: string, spec: ProjectSpec, env: E
   const results = await Promise.allSettled([
     (async () => {
       await updateRun("infra", "running");
-      // TODO: Task 4 wires this up
-      await updateRun("infra", "completed", JSON.stringify({ message: "Infra agent not yet implemented" }));
+      try {
+        const result = await runInfraAgent(projectId, spec, env);
+        await env.DB.prepare("UPDATE projects SET worker_url = ? WHERE id = ?").bind(result.workerUrl, projectId).run();
+        await updateRun("infra", "completed", JSON.stringify(result));
+      } catch (err: any) {
+        await updateRun("infra", "failed", null, err.message);
+      }
     })(),
     (async () => {
       await updateRun("payments", "running");
